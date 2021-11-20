@@ -1,6 +1,7 @@
 pragma solidity 0.7.0;
 
 import './bank.sol';
+import './IPriceOracle.sol';
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
 contract Bank is IBank {
@@ -80,32 +81,60 @@ contract Bank is IBank {
         IERC20 tokenID = token;
         require(msg.sender.getBalance >= amount);
         uint256 amountRepayable;
-        if(amount>borrowed[msg.sender]){
-                amountRepayable = borrowed[msg.sender];
-        } else {
-            amountRepayable = borrowed[msg.sender];
-        }
+        
         if (tokenID == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) { //deposit ETH
+            if(amount>borrowedETH[msg.sender]){
+                amountRepayable = borrowedETH[msg.sender];
+            } else {
+                amountRepayable = amount;
+            }
             owner.transfer(amountRepayable);
-        } else if (tokenID == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C) { //deposit HAK
+            borrowedETH[msg.sender] -=  1.00 * amountRepayable * (0.95);
+            return borrowedETH[msg.sender];
+        } else if (tokenID == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C) { //deposit HA
+            if(amount>borrowedHAK[msg.sender]){
+                amountRepayable = borrowedHAK[msg.sender];
+            } else {
+                amountRepayable = amount;
+            }
             tokenID.transferFrom(amountRepayable);
+            borrowedHAK[msg.sender] -=  1.00 * amountRepayable * (0.95);
+            return borrowedHAK[msg.sender];
         }
-
-        borrowed[msg.sender] -=  1.00 * amountRepayable * (0.95);
-        return borrowed[msg.sender];
+        return -1;
     }
 
 
     function liquidate(address token, address account) onlyOwner payable external override returns (bool) {
-
+        IERC20 tokenID = token;
+        if (getCollateralRatio(tokenID,account)<15000) {
+            
+            uint amountOnDeposit = deposits[account] +accruedInterest[account];
+            uint amountBorrowed = borrowed[account]+owedInterest[account];
+            deposits[account]=0;
+            accruedInterest[account]= 0;
+            borrowed[account]=0;
+            owedInterest[account]=0;
+            depositsETH[this] -= amountBorrowed;
+            depositsHAK[this] +=amountOnDeposit;
+            return true;
+        } else revert();
     }
 
-    function getCollateralRatio(address token, address account) onlyOwner view external override returns (uint256) {
 
-//0xc3F639B8a6831ff50aD8113B438E2Ef873845552
+
+
+    function getCollateralRatio(address token, address account) onlyOwner view external override returns (uint256) {
+        IERC20 tokenID = token;
+        PriceOracle po = PriceOracle();
+        if (tokenId = 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C)
+        {
+            return po.call.getVirtualPrice(tokenID)*depositsHAK[account]*10000/ borrowedETH[account];
+        } else revert();
     }
 
     function getBalance(address token) onlyOwner view external override returns (uint256) {
+        IERC20 tokenID = token;
         if (tokenID == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) { //deposit ETH
             return depositETH[msg.sender] * 1.03;
         } else if (tokenID == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C) { //deposit HAK
