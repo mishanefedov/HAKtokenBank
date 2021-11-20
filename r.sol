@@ -87,23 +87,23 @@ contract Bank is IBank {
         uint256 amountRepayable;
         
         if (tokenID == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) { //deposit ETH
-            if(amount>borrowedETH[msg.sender]){
-                amountRepayable = borrowedETH[msg.sender];
+            if(amount>borrowedETH[msg.sender].deposit){
+                amountRepayable = borrowedETH[msg.sender].deposit;
             } else {
                 amountRepayable = amount;
             }
             owner.transfer(amountRepayable);
-            borrowedETH[msg.sender] -=  1.00 * amountRepayable * (0.95);
-            return borrowedETH[msg.sender];
+            borrowedETH[msg.sender].deposit -=  1.00 * amountRepayable * (0.95);
+            return borrowedETH[msg.sender].deposit;
         } else if (tokenID == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C) { //deposit HA
-            if(amount>borrowedHAK[msg.sender]){
-                amountRepayable = borrowedHAK[msg.sender];
+            if(amount>borrowedHAK[msg.sender].deposit){
+                amountRepayable = borrowedHAK[msg.sender].deposit;
             } else {
                 amountRepayable = amount;
             }
             tokenID.transferFrom(amountRepayable);
-            borrowedHAK[msg.sender] -=  1.00 * amountRepayable * (0.95);
-            return borrowedHAK[msg.sender];
+            borrowedHAK[msg.sender].deposit -=  1.00 * amountRepayable * (0.95);
+            return borrowedHAK[msg.sender].deposit;
         }revert();
     }
 
@@ -112,19 +112,16 @@ contract Bank is IBank {
         require(getCollateralRatio(token, account) <15000);
         IERC20 tokenID = token;
         if (tokenID == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) { //deposit ETH
-            return depositETH[msg.sender] * 1.03;
+            depositETH[msg.sender].deposit += (depositsETH[account].deposit - borrowedETH[account])
+            depositsETH[account].deposit = 0;
+            borrowedETH[account] = 0;
+            return true;
         } else if (tokenID == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C) { //deposit HAK
-            return depositHAK[msg.sender] * 1.03;
-        }
-        uint256 amountOnDeposit = 
-        uint256 amountBorrowed = borrowed[account]+owedInterest[account];
-        deposits[account]=0;
-        accruedInterest[account]= 0;
-        borrowed[account]=0;
-        owedInterest[account]=0;
-        depositsETH[this] -= amountBorrowed;
-        depositsHAK[this] +=amountOnDeposit;
-        return true;
+            depositHAK[msg.sender].deposit += (depositHAK[account].deposit - borrowedHAL[account])
+            depositHAK[account].deposit = 0;
+            borrowedHAL[account] = 0;
+            return true;
+        }return false;
     }
 
 
