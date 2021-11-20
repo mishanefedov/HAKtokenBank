@@ -5,16 +5,16 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 
 contract Bank is IBank {
 
-    struct Deposit {
+    /*struct Deposit {
         uint amount;
         uint blockNumber;
-    }
+    }*/
 
-    mapping (address => Deposit[]) depositsETH;
-    mapping (address => Deposit[]) depositsHAK;
-    mapping (address => Deposit[]) borrowedETH;
-    mapping (address => Deposit[]) borrowedHAK;
-    mapping (unit => type2) name;
+    mapping (address => uint) depositsETH;
+    mapping (address => uint) depositsHAK;
+    mapping (address => uint) borrowedETH;
+    mapping (address => uint) borrowedHAK;
+    
     address payable public owner;
 
     modifier onlyOwner{
@@ -31,41 +31,48 @@ contract Bank is IBank {
         if (tokenID == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) { //deposit ETH
             require(msg.value >= amount);
             owner.transfer(amount);
-            Deposit dep = Deposit(amount, block.number);
-            depositsETH[token].push(dep);
+            //Deposit dep = Deposit(amount, block.number);
+            depositsETH[token] += amount;
         } else if (tokenID == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C) { //deposit HAK
             require(msg.value >= amount);
             tokenID.transferFrom(msg.sender, owner, amount);
-            Deposit dep = Deposit(amount, block.number);
-            depositsHAK[token].push(dep);
+            //Deposit dep = Deposit(amount, block.number);
+            depositsHAK[token] += amount;
         }
     }
 
     function withdraw(address token, uint256 amount) onlyOwner external override returns (uint256) {
         IERC20 tokenID = token;
         if (tokenID == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) { //withdraw ETH
-            //require(this.balance >= amount);
-            uint interest = 0;
-            uint balance = 0;
-            for (uint i=depositsETH[token].length-1; i>=0; i--) {
-                Deposit temp = depositsETH[token];
-                balance += (temp[i].amount);
-                if (balance >= amount) {
-                    interest = (temp[i].blockNumber - block.number)*1.03*amount;
-                }
+            require(depositsETH[msg.sender] >= amount);
+            uint interest;
+            if (amount == 0) {
+                interest = depositsETH[msg.sender] * 1.03 * block.number;
+                depositsETH[msg.sender] = 0;
+                return interest;
             }
-            uint interest = depositsETH[token].getamount
+            interest = amount * block.number * 0.03;
             depositsETH[msg.sender] -= amount;
+            depositsETH[msg.sender] += interest;
             msg.sender.transfer(amount);
+            return interest + amount;
         } else if (tokenID == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C) { //withdraw HAK
             require(deposits[msg.sender] >= amount);
+            uint interest;
+            if (amount == 0) {
+                interest = depositsHAK[msg.sender] * 1.03 * block.number;
+                depositsHAK[msg.sender] = 0;
+                return interest;
+            }
+            interest = amount * block.number * 0.03;
             depositsHAK[msg.sender] -= amount;
+            depositsHAK[msg.sender] += interest;
             tokenID.transferFrom(msg.sender, owner, amount);
         }
     }
 
     function borrow(address token, uint256 amount) onlyOwner external override returns (uint256) {
-
+        
     }
 
     function repay(address token, uint256 amount) onlyOwner payable external override returns (uint256) {
