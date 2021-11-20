@@ -111,15 +111,11 @@ contract Bank is IBank {
     function liquidate(address token, address account) onlyOwner payable external override returns (bool) {
         require(getCollateralRatio(token, account) <15000);
         IERC20 tokenID = token;
-        if (tokenID == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) { //deposit ETH
-            depositETH[msg.sender].deposit += (depositsETH[account].deposit - borrowedETH[account])
-            depositsETH[account].deposit = 0;
-            borrowedETH[account] = 0;
-            return true;
-        } else if (tokenID == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C) { //deposit HAK
-            depositHAK[msg.sender].deposit += (depositHAK[account].deposit - borrowedHAL[account])
+        if (tokenID == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C) { //deposit HAK
+            depositHAK[msg.sender].deposit += (depositHAK[account].deposit - borrowedHAK[account])
             depositHAK[account].deposit = 0;
-            borrowedHAL[account] = 0;
+            depositHAK[account].interest =0;
+            borrowedHAK[account] = 0;
             return true;
         }return false;
     }
@@ -129,7 +125,7 @@ contract Bank is IBank {
 
     function getCollateralRatio(address token, address account) onlyOwner view external override returns (uint256) {
         IERC20 tokenID = token;
-        PriceOracle po = PriceOracle();
+        IPriceOracle po = new PriceOracle();
         if (tokenId = 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C){
             return po.call.getVirtualPrice(tokenID)*depositsHAK[account]*10000/ borrowedETH[account];
         } else revert();
