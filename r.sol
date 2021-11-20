@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 
 
 contract Account {
-    
+
 }
 contract Bank is IBank {
 
@@ -104,8 +104,7 @@ contract Bank is IBank {
             tokenID.transferFrom(amountRepayable);
             borrowedHAK[msg.sender] -=  1.00 * amountRepayable * (0.95);
             return borrowedHAK[msg.sender];
-        }
-        return -1;
+        }revert();
     }
 
 
