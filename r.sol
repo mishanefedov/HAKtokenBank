@@ -5,11 +5,16 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 
 contract Bank is IBank {
 
-    mapping (address => uint) depositsETH;
-    mapping (address => uint) depositsHAK;
-    mapping (address => uint) borrowedETH;
-    mapping (address => uint) borrowedHAK;
+    struct Deposit {
+        uint amount;
+        uint blockNumber;
+    }
 
+    mapping (address => Deposit[]) depositsETH;
+    mapping (address => Deposit[]) depositsHAK;
+    mapping (address => Deposit[]) borrowedETH;
+    mapping (address => Deposit[]) borrowedHAK;
+    mapping (unit => type2) name;
     address payable public owner;
 
     modifier onlyOwner{
@@ -26,17 +31,35 @@ contract Bank is IBank {
         if (tokenID == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) { //deposit ETH
             require(msg.value >= amount);
             owner.transfer(amount);
+            Deposit dep = Deposit(amount, block.number);
+            depositsETH[token].push(dep);
         } else if (tokenID == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C) { //deposit HAK
+            require(msg.value >= amount);
             tokenID.transferFrom(msg.sender, owner, amount);
+            Deposit dep = Deposit(amount, block.number);
+            depositsHAK[token].push(dep);
         }
     }
 
     function withdraw(address token, uint256 amount) onlyOwner external override returns (uint256) {
         IERC20 tokenID = token;
-        if (tokenID == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) { //deposit ETH
-            require(this.balance >= amount);
-            owner.transfer(amount);
-        } else if (tokenID == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C) { //deposit HAK
+        if (tokenID == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) { //withdraw ETH
+            //require(this.balance >= amount);
+            uint interest = 0;
+            uint balance = 0;
+            for (uint i=depositsETH[token].length-1; i>=0; i--) {
+                Deposit temp = depositsETH[token];
+                balance += (temp[i].amount);
+                if (balance >= amount) {
+                    interest = (temp[i].blockNumber - block.number)*1.03*amount;
+                }
+            }
+            uint interest = depositsETH[token].getamount
+            depositsETH[msg.sender] -= amount;
+            msg.sender.transfer(amount);
+        } else if (tokenID == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C) { //withdraw HAK
+            require(deposits[msg.sender] >= amount);
+            depositsHAK[msg.sender] -= amount;
             tokenID.transferFrom(msg.sender, owner, amount);
         }
     }
