@@ -15,8 +15,14 @@ contract Bank is IBank {
         uint blockNumber;
     }*/
 
-    mapping (address => uint) depositsETH;
-    mapping (address => uint) depositsHAK;
+    struct Account { // Note that token values have an 18 decimal precision
+        uint256 deposit;           // accumulated deposits made into the account
+        uint256 interest;          // accumulated interest
+        uint256 lastInterestBlock; // block at which interest was last computed
+    }
+
+    mapping (address => Account) depositsETH;
+    mapping (address => Account) depositsHAK;
     mapping (address => uint) borrowedETH;
     mapping (address => uint) borrowedHAK;
     
@@ -34,15 +40,33 @@ contract Bank is IBank {
     function deposit(address token, uint256 amount) onlyOwner payable external override returns (bool) {
         IERC20 tokenID = token;
         if (tokenID == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) { //deposit ETH
-            require(msg.value >= amount);
+            require(msg.sender.value >= amount);
             owner.transfer(amount);
+            if (depositsETH[token])
             //Deposit dep = Deposit(amount, block.number);
             depositsETH[token] += amount;
         } else if (tokenID == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C) { //deposit HAK
-            require(msg.value >= amount);
+            require(msg.sender.value >= amount);
             tokenID.transferFrom(msg.sender, owner, amount);
             //Deposit dep = Deposit(amount, block.number);
             depositsHAK[token] += amount;
+        }
+    }
+
+    function currentInterest(address account, string cType, uint amount) private returns (uint) {
+        uint interest;
+        if (cType == "ETH") {
+
+            interest = depositsETH[account].deposit * (block.number - depositsETH[account].lastInterestBlock) * 0.03;
+            depositsETH[account].interest += interest;
+            depositsETH[account].lastInterestBlock = block.number;
+            return interest;
+        }
+        if (cType == "HAK") {
+            interest = depositsHAK[account].deposit * (block.number - depositsHAK[account].lastInterestBlock) * 0.03;
+            depositsHAK[account].interest += interest;
+            depositsHAK[account].lastInterestBlock = block.number;
+            return interest;
         }
     }
 
