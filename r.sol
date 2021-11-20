@@ -70,7 +70,7 @@ contract Bank is IBank {
             borrowedHAK[msg.sender] -=  1.00 * amountRepayable * (0.95);
             return borrowedHAK[msg.sender];
         }
-
+        return -1;
     }
 
 
