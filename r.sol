@@ -105,7 +105,7 @@ contract Bank is IBank {
     }
 
     function repay(address token, uint256 amount) onlyOwner payable external override returns (uint256) {
-        require(getCollateralRatio(token, ));
+        require(getCollateralRatio(token, account) > 1500);
         IERC20 tokenID = token;
         require(msg.sender.getBalance >= amount);
         uint256 amountRepayable;
@@ -136,7 +136,7 @@ contract Bank is IBank {
         require(getCollateralRatio(token, account) <15000);
         IERC20 tokenID = token;
         if (tokenID == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C) { //deposit HAK
-            depositHAK[msg.sender].deposit += (depositHAK[account].deposit - borrowedHAK[account])
+            depositHAK[msg.sender].deposit += (depositHAK[account].deposit - borrowedHAK[account] + currentInterest(account, "HAK", depositHAK[account].deposit));
             depositHAK[account].deposit = 0;
             depositHAK[account].interest =0;
             borrowedHAK[account] = 0;
@@ -148,18 +148,16 @@ contract Bank is IBank {
 
 
     function getCollateralRatio(address token, address account) onlyOwner view external override returns (uint256) {
-        IERC20 tokenID = token;
         IPriceOracle po = new PriceOracle();
-        if (tokenId = 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C){
-            return po.call.getVirtualPrice(tokenID)*depositsHAK[account]*10000/ borrowedETH[account];
+        if (token = 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C){
+            return po.call.getVirtualPrice(token)*depositsHAK[account]*10000/ borrowedETH[account];
         } else revert();
     }
 
     function getBalance(address token) onlyOwner view external override returns (uint256) {
-        IERC20 tokenID = token;
-        if (tokenID == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) { //deposit ETH
+        if (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) { //deposit ETH
             return depositETH[msg.sender] * 1.03;
-        } else if (tokenID == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C) { //deposit HAK
+        } else if (token == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C) { //deposit HAK
             return depositHAK[msg.sender] * 1.03;
         }
     }
