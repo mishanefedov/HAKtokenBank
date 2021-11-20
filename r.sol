@@ -1,6 +1,7 @@
 pragma solidity 0.7.0;
 
 import './bank.sol';
+import './IPriceOracle.sol';
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
 contract Bank is IBank {
@@ -78,14 +79,14 @@ contract Bank is IBank {
         IERC20 tokenID = token;
         if (getCollateralRatio(tokenID,account)<15000) {
             
-                uint amountOnDeposit = deposits[account] +accruedInterest[account];
-                uint amountBorrowed = borrowed[account]+owedInterest[account];
-                deposits[account]=0;
-                accruedInterest[account]= 0;
-                borrowed[account]=0;
-                owedInterest[account]=0;
-                depositsETH[this] -= amountBorrowed;
-                depositsHAK[this] +=amountOnDeposit;
+            uint amountOnDeposit = deposits[account] +accruedInterest[account];
+            uint amountBorrowed = borrowed[account]+owedInterest[account];
+            deposits[account]=0;
+            accruedInterest[account]= 0;
+            borrowed[account]=0;
+            owedInterest[account]=0;
+            depositsETH[this] -= amountBorrowed;
+            depositsHAK[this] +=amountOnDeposit;
             return true;
         } else revert();
     }
@@ -95,15 +96,15 @@ contract Bank is IBank {
 
     function getCollateralRatio(address token, address account) onlyOwner view external override returns (uint256) {
         IERC20 tokenID = token;
-         if (tokenID == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {// ETH
-         return (deposits[account] + accruedInterest[account]) * 10000 / (borrowed[account] + owedInterest[account]);
-         }else 
-         if (tokenID == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C) {//HAK
-         return (deposits[account] + accruedInterest[account]) * 10000 / (borrowed[account] + owedInterest[account]);
-         }
+        PriceOracle po = PriceOracle();
+        if (tokenId = 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C)
+        {
+            return po.call.getVirtualPrice(tokenID)*depositsHAK[account]*10000/ borrowedETH[account];
+        } else revert();
     }
 
     function getBalance(address token) onlyOwner view external override returns (uint256) {
+        IERC20 tokenID = token;
         if (tokenID == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) { //deposit ETH
             return depositETH[msg.sender] * 1.03;
         } else if (tokenID == 0xBefeeD4CB8c6DD190793b1c97B72B60272f3EA6C) { //deposit HAK
