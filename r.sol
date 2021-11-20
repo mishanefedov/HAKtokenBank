@@ -11,7 +11,6 @@ contract Bank is IBank {
     mapping (address => uint) borrowedHAK;
 
     address payable public owner;
-    uint balance;
 
     modifier onlyOwner{
         require(msg.sender == owner);
